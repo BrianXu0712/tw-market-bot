@@ -3,12 +3,10 @@ name: Daily TW Market Report
 on:
   schedule:
     # 台灣時間 每天 07:00（對應 UTC 23:00）
-    # ※ 若只想週一～週五推播，請改成 '0 23 * * 0-4'
     - cron: '0 23 * * *'
     # 台灣時間 每天 21:35（對應 UTC 13:35）
-    # ※ 若只想週一～週五推播，請改成 '35 13 * * 1-5'
     - cron: '35 13 * * *'
-  workflow_dispatch:  # 允許在 GitHub Actions 網頁上手動點擊立即測試
+  workflow_dispatch:
 
 jobs:
   run-report:
