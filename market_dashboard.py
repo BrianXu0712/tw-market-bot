@@ -39,11 +39,20 @@ def get_vix_5y():
 
 
 def get_cnn_fear_greed():
-    url = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    # 加上當前時間戳記 (t=...) 強制繞過 CNN 的 CDN 快取
+    ts = int(datetime.now().timestamp())
+    url = f"https://production.dataviz.cnn.io/index/fearandgreed/graphdata?t={ts}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://edition.cnn.com/",
+        "Accept": "application/json, text/plain, */*",
+    }
     try:
-        r = requests.get(url, headers=headers, timeout=10).json()
-        fg = r.get("fear_and_greed", {})
+        r = requests.get(url, headers=headers, timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        fg = data.get("fear_and_greed", {})
+        print("CNN API 原始更新時間:", fg.get("timestamp"))  # 方便在 GitHub Actions log 核對
         return {
             "score": round(fg.get("score", 0)),
             "rating": fg.get("rating", "N/A").title(),
@@ -52,7 +61,8 @@ def get_cnn_fear_greed():
             "prev_1m": round(fg.get("previous_1_month", 0)),
             "prev_1y": round(fg.get("previous_1_year", 0)),
         }
-    except Exception:
+    except Exception as e:
+        print("CNN 抓取失敗:", e)
         return None
 
 
