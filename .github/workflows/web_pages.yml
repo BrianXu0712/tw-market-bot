@@ -1,0 +1,43 @@
+name: Update GitHub Pages Dashboard
+
+on:
+  schedule:
+    # 台灣時間 每天 07:00（對應 UTC 23:00）
+    - cron: '0 23 * * *'
+    # 台灣時間 每天 21:35（對應 UTC 13:35）
+    - cron: '35 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # 允許 Actions 將產出的圖表與網頁存回專案
+
+jobs:
+  build-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Chinese Fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate chart and update HTML
+        run: python web_dashboard.py
+
+      - name: Commit and push updated dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --staged --quiet || git commit -m "Update market dashboard $(date +'%Y-%m-%d %H:%M')"
+          git push
